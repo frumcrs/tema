@@ -7,11 +7,16 @@
 using namespace std;
 
 class BigNumber {
+
 private:
+
   vector<unsigned char> _num;
   unsigned char _base;
   int _sign;
+
+
 public:
+
   BigNumber(long long int number, unsigned char base = 10){
     _sign = (number >= 0 ? 1 : -1);
     _base = base;
@@ -25,7 +30,9 @@ public:
       number /= base;
     }
   }
+
   BigNumber(int number = 0, unsigned char base = 10) : BigNumber(static_cast<long long int>(number), base) {}
+
   BigNumber(string number, unsigned char base = 10) {
     if(*number.begin() == '-') {
       number.erase(0, 1);
@@ -54,21 +61,21 @@ public:
       else return false;
     }
     if(this->_sign == 1){
-      if(this->_num.size() > this->_num.size()) return false;
-      if(this->_num.size() > this->_num.size()) return true;
-      if(this->_num.size() == this->_num.size()) {
+      if(this->_num.size() > other._num.size()) return false; // daca argumentu are mai multe cifre
+      if(this->_num.size() < other._num.size()) return true; // daca argumentu are mai putine cifre
+      if(this->_num.size() == other._num.size()) { // daca au nr de cifre egale
         for(int i = 0; i < this->_num.size(); i++) {
-          if(this->_num.at(i) == other._num.at(i)) continue;
-          if(this->_num.at(i) < other._num.at(i)) return true;
+          if(this->_num.at(i) == other._num.at(i)) continue; // da skip pana da de 2 cifre care nu sunt egale
+          if(this->_num.at(i) < other._num.at(i)) return true; // compara cele 2 cifre decisive
           else return false;
         }
       }
       return false;
     }
     else {
-      if(this->_num.size() > this->_num.size()) return true;
-      if(this->_num.size() > this->_num.size()) return false;
-      if(this->_num.size() == this->_num.size()) {
+      if(this->_num.size() > other._num.size()) return true;
+      if(this->_num.size() > other._num.size()) return false;
+      if(this->_num.size() == other._num.size()) {
         for(int i = 0; i < this->_num.size(); i++) {
           if(this->_num.at(i) == other._num.at(i)) continue;
           if(this->_num.at(i) < other._num.at(i)) return false;
@@ -80,12 +87,12 @@ public:
   }
 
   bool operator ==(const BigNumber& other) {
-    if(this->_sign != other._sign) return false;
+    if(this->_sign != other._sign) return false; // daca au semn diferit e fals
 
-    if(this->_num.size() != this->_num.size()) return false;
+    if(this->_num.size() != this->_num.size()) return false; // daca au nr diferit de cifre e fals
     else {
       for(int i = 0; i < this->_num.size(); i++) {
-        if(this->_num.at(i) != other._num.at(i)) return false;
+        if(this->_num.at(i) != other._num.at(i)) return false; // daca gaseste o cifra diferita e fals
       }
     }
     return true;
@@ -111,26 +118,26 @@ public:
   }
 
   BigNumber& operator +=(const BigNumber& other) {
-    if(this->_base != other._base) throw invalid_argument("Different bases of numbers provided");
+    if(this->_base != other._base) throw invalid_argument("Different bases of provided numbers");
 
-    unsigned char reminder = 0;
+    unsigned char reminder = 0; // cifra pe care o " tinem minte " la adunare
     unsigned char little_sum = 0;
     unsigned char max_size = max(this->_num.size(), other._num.size());
     unsigned char min_size;
 
-    if(this->_sign == other._sign) {
-      if(this->_num.size() <= other._num.size()) min_size = this->_num.size();
-      else min_size = max_size;
+    if(this->_sign == other._sign) { // daca au acelasi semn
+      if(this->_num.size() <= other._num.size()) min_size = this->_num.size(); //retin minim
+      else min_size = other._num.size();
 
       for(int i = 0; i < max_size || reminder > 0; i++) {
-        unsigned char fnl = (i < this->_num.size() ? this->_num.at(i) : 0);
-        unsigned char snl = (i < other._num.size() ? other._num.at(i) : 0);
+        unsigned char fnl = (i < this->_num.size() ? this->_num.at(i) : 0); // incepe de la ultima cifra
+        unsigned char snl = (i < other._num.size() ? other._num.at(i) : 0); // incepe de la ultima cifra
         little_sum = fnl + snl + reminder;
         reminder = little_sum / this->_base;
         little_sum %= this->_base;
 
-        if(i >= min_size) this->_num.push_back(little_sum);
-        else this->_num.at(i) = little_sum;
+        if(i >= min_size) this->_num.push_back(little_sum); // daca am trecut de numarul mai mic, adaugam la sfarsit suplimentar
+        else this->_num.at(i) = little_sum; // altfel, inlocuim
       }
     }
     else {
@@ -177,14 +184,14 @@ public:
 
   BigNumber operator *=(const BigNumber& other){
     BigNumber result = 0;
-    for(BigNumber i = 1; i <= other; i += 1) result += other;
+    for(BigNumber i = 1; i <= other._num.size(); i += 1) result += other; // in loc sa inmultim, folosim adunarea de cate ori e nevoie
     return result;
   }
 
   BigNumber operator -=(const BigNumber& other){
     BigNumber aux = other;
     aux *= -1;
-    *this *= aux;
+    *this += aux; // folosim adunarea cu minus
     return *this;
   }
 
@@ -194,25 +201,25 @@ public:
     if(*this < 0) copy *= -1;
     while(copy > 0) {
       copy -= other;
-      count += 1;
+      count += 1; // vedem de cate ori am scazut care va fi partea intreaga ramasa
     }
-    count._sign = this->_sign;
+    count._sign = this->_sign; // semnul va fi semnul initial
     *this = count;
 
     return *this;
   }
 
-  BigNumber operator %=(const BigNumber& other) {
+  friend BigNumber operator %=(const BigNumber& other) {
     BigNumber copy = *this;
     if(*this < 0) copy *= -1;
-    while(copy > 0) copy -= other;
-    copy._sign = this->_sign;
-    *this = copy;
+    while(copy > 0) copy -= other; // scadem de cate ori putem
+    copy._sign = this->_sign; // semnu ramane cel initial
+    *this = copy; // inlocuim valoarea initiala cu ce a ramas
 
     return *this;
   }
 
-  BigNumber operator ^=(const BigNumber& other){
+  friend BigNumber operator ^=(const BigNumber& other){
     BigNumber result = 1;
     for(BigNumber i = 1; i <= other; i += 1) result *= other;
     return result;
@@ -276,16 +283,18 @@ public:
   }
   friend istream& operator >>(istream& stream, BigNumber& number) {
     string s;
+    int x;
     stream >> s;
-    number = BigNumber(s);
+    stream >> x;
+    number = BigNumber(s,x);
     return stream;
   }
 };
 
 int main(){
-  BigNumber a = 19243;
-  BigNumber b = -132415;
-  a += b;
-  cout << (a + b) << "\n";
+  BigNumber a =10 ;
+  BigNumber b = 143 ;
+    cout<< (a *= b);
+
   return 0;
 }
